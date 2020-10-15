@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">
+            [%d{yyyy-MM-dd HH:mm:ss.SSS}]-[%t]-[%X{traceId}]-[%-5level]-[%c{36}:%L]-[%m]%n
+        </Property>
+        <Property name="LOG_PATTERN_ERROR">
+            [%d{yyyy-MM-dd HH:mm:ss.SSS}]-[%t]-[%X{traceId}]-[%-5level]-[%l:%M]-[%m]%n
+        </Property>
+        <Property name="APP_LOG_ROOT">/data/logs</Property>
+        <Property name="APP_NAME">trace-demo-2</Property>
+    </Properties>
+    <!--先定义所有的appender-->
+    <Appenders>
+        <!--这个输出控制台的配置-->
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <!--输出日志的格式-->
+            <PatternLayout charset="UTF-8"  pattern="${LOG_PATTERN}"/>
+        </Console>
+        <!-- 这个会打印出所有的Info及以下级别的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档-->
+        <RollingRandomAccessFile name="RollingFileInfo"
+                                 immediateFlush="true"
+                                 fileName="${APP_LOG_ROOT}/${APP_NAME}-info.log"
+                                 filePattern="${APP_LOG_ROOT}/${date:yyyy-MM}/${APP_NAME}-%d{yyyy-MM-dd}-%i.zip">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout charset="UTF-8" pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="512MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingRandomAccessFile>
+
+        <!-- 这个会打印出所有的Error及以下级别的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档-->
+        <RollingRandomAccessFile name="RollingFileError"
+                                 fileName="${APP_LOG_ROOT}/${APP_NAME}-error.log"
+                                 filePattern="${APP_LOG_ROOT}/${date:yyyy-MM}/${APP_NAME}-error-%d{yyyy-MM-dd}-%i.zip">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout  charset="UTF-8" pattern="${LOG_PATTERN_ERROR}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="512MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20"/>
+        </RollingRandomAccessFile>
+
+    </Appenders>
+
+    <Loggers>
+        <Root level="info" includeLocation="true">
+            <AppenderRef ref="Console"/>
+            <!-- <AppenderRef level="debug" ref="RollingFileDebug"/>-->
+        </Root>
+        <Logger name="org.springframework" additivity="false">
+            <AppenderRef ref="RollingFileInfo"/>
+            <AppenderRef ref="RollingFileError"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.mybatis" additivity="false">
+            <AppenderRef ref="RollingFileInfo"/>
+            <AppenderRef ref="RollingFileError"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.liuzhihang" additivity="false" includeLocation="true">
+            <AppenderRef ref="RollingFileInfo"/>
+            <AppenderRef ref="RollingFileError"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+    </Loggers>
+</Configuration>
